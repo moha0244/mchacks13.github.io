@@ -1,4 +1,3 @@
-export const dynamic = "force-dynamic";
 
 import { baseURL } from "@/baseUrl";
 import { createMcpHandler } from "mcp-handler";
