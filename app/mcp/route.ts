@@ -2,6 +2,8 @@ import { baseURL } from "@/baseUrl";
 import { createMcpHandler } from "mcp-handler";
 import { z } from "zod";
 
+export const dynamic = "force-dynamic";
+
 const getAppsSdkCompatibleHtml = async (baseUrl: string, path: string) => {
   const result = await fetch(`${baseUrl}${path}`);
   return await result.text();
@@ -65,7 +67,7 @@ const handler = createMcpHandler(async (server) => {
           },
         },
       ],
-    })
+    }),
   );
 
   // Tool: Add a new todo
@@ -97,7 +99,7 @@ const handler = createMcpHandler(async (server) => {
           action: "added",
         },
       };
-    }
+    },
   );
 
   // Tool: List all todos
@@ -116,9 +118,10 @@ const handler = createMcpHandler(async (server) => {
         content: [
           {
             type: "text",
-            text: allTodos.length > 0
-              ? `You have ${allTodos.length} task(s)`
-              : "Your todo list is empty",
+            text:
+              allTodos.length > 0
+                ? `You have ${allTodos.length} task(s)`
+                : "Your todo list is empty",
           },
         ],
         structuredContent: {
@@ -126,7 +129,7 @@ const handler = createMcpHandler(async (server) => {
           action: "list",
         },
       };
-    }
+    },
   );
 
   // Tool: Complete a todo
@@ -158,7 +161,7 @@ const handler = createMcpHandler(async (server) => {
         content: [{ type: "text", text: `Completed: "${todo.text}"` }],
         structuredContent: { todos: getAllTodos(), action: "completed" },
       };
-    }
+    },
   );
 
   // Tool: Delete a todo
@@ -189,7 +192,7 @@ const handler = createMcpHandler(async (server) => {
         content: [{ type: "text", text: `Deleted: "${todo.text}"` }],
         structuredContent: { todos: getAllTodos(), action: "deleted" },
       };
-    }
+    },
   );
 
   // Tool: Clear completed todos
@@ -220,7 +223,7 @@ const handler = createMcpHandler(async (server) => {
         ],
         structuredContent: { todos: getAllTodos(), action: "cleared" },
       };
-    }
+    },
   );
 });
 
