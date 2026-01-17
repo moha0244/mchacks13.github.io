@@ -33,7 +33,7 @@ interface WidgetData extends Record<string, unknown> {
   revisionTime?: string;
   complexity?: string;
   chapters?: any[];
-  
+
   // Add the missing properties
   summary?: string;
   text?: string;
@@ -44,7 +44,7 @@ interface WidgetData extends Record<string, unknown> {
   duration?: string;
   difficulty?: string;
   sections?: any[];
-  
+
   // Structured content variations
   structuredContent?: {
     studyContent?: StudyContent;
@@ -107,7 +107,7 @@ export default function StudyApp() {
   const isChatGptApp = useIsChatGptApp();
 
   // Extract study content from tool output - CAST TO ANY
-  const serverContent: any = (
+  const serverContent: any =
     toolOutput?.result?.structuredContent?.studyContent ??
     toolOutput?.result?.studyContent ??
     toolOutput?.structuredContent?.studyContent ??
@@ -115,8 +115,9 @@ export default function StudyApp() {
     toolOutput?.result?.structuredContent ??
     toolOutput?.structuredContent ??
     toolOutput?.result ??
-    toolOutput
-  );
+    toolOutput;
+
+  console.log("Tool Output:", serverContent);
 
   // Local state for UI
   const [studyData, setStudyData] = useState<StudyContent | null>(null);
@@ -125,13 +126,13 @@ export default function StudyApp() {
   // Sync from server whenever tool output changes
   useEffect(() => {
     console.log("Received tool output:", serverContent); // Debug log
-    
+
     if (serverContent) {
-      if (typeof serverContent === 'object' && 'content' in serverContent) {
+      if (typeof serverContent === "object" && "content" in serverContent) {
         // It's a StudyContent object
         setStudyData(serverContent as StudyContent);
         setContent(serverContent.content || "");
-      } else if (typeof serverContent === 'string') {
+      } else if (typeof serverContent === "string") {
         // It's just string content
         setContent(serverContent);
         setStudyData({
@@ -142,10 +143,10 @@ export default function StudyApp() {
           complexity: "medium",
           createdAt: "Today",
         });
-      } else if (serverContent && typeof serverContent === 'object') {
+      } else if (serverContent && typeof serverContent === "object") {
         // Try to extract content from various fields
         let extractedContent = "";
-        
+
         // Check for content in various fields - serverContent is now 'any'
         if (serverContent.content) {
           extractedContent = serverContent.content;
@@ -159,30 +160,43 @@ export default function StudyApp() {
           extractedContent = serverContent.message;
         } else {
           // If no content found, format object as readable text without JSON braces
-          extractedContent = Object.entries(serverContent)
-            .filter(([key]) => !key.startsWith('_') && key !== 'id' && key !== 'createdAt')
-            .map(([key, value]) => {
-              if (typeof value === 'string' && value.trim()) {
-                return `**${key}:** ${value}`;
-              } else if (Array.isArray(value) && value.length > 0) {
-                return `**${key}:**\n${value.map((item, i) => `${i + 1}. ${item}`).join('\n')}`;
-              }
-              return null;
-            })
-            .filter(Boolean)
-            .join('\n\n') || "Study content received. Format your response with 'content' or 'summary' field for better display.";
+          extractedContent =
+            Object.entries(serverContent)
+              .filter(
+                ([key]) =>
+                  !key.startsWith("_") && key !== "id" && key !== "createdAt",
+              )
+              .map(([key, value]) => {
+                if (typeof value === "string" && value.trim()) {
+                  return `**${key}:** ${value}`;
+                } else if (Array.isArray(value) && value.length > 0) {
+                  return `**${key}:**\n${value.map((item, i) => `${i + 1}. ${item}`).join("\n")}`;
+                }
+                return null;
+              })
+              .filter(Boolean)
+              .join("\n\n") ||
+            "Study content received. Format your response with 'content' or 'summary' field for better display.";
         }
-        
+
         setContent(extractedContent);
         setStudyData({
           // Use extractedContent.length safely
           id: "study-" + Math.abs(extractedContent.length).toString(),
-          title: serverContent.title || serverContent.filename || "Study Material",
+          title:
+            serverContent.title || serverContent.filename || "Study Material",
           content: extractedContent,
-          revisionTime: serverContent.revisionTime || serverContent.studyTime || serverContent.duration || "Not specified",
+          revisionTime:
+            serverContent.revisionTime ||
+            serverContent.studyTime ||
+            serverContent.duration ||
+            "Not specified",
           complexity: (() => {
             const comp = serverContent.complexity || serverContent.difficulty;
-            if (comp && ['easy', 'medium', 'hard'].includes(comp.toLowerCase())) {
+            if (
+              comp &&
+              ["easy", "medium", "hard"].includes(comp.toLowerCase())
+            ) {
               return comp.toLowerCase() as "easy" | "medium" | "hard";
             }
             return "medium";
@@ -198,89 +212,107 @@ export default function StudyApp() {
   const renderContent = (text: string) => {
     // First escape any curly braces to prevent React from interpreting them
     const escapeBraces = (str: string) => {
-      return str.replace(/{/g, '&#123;').replace(/}/g, '&#125;');
+      return str.replace(/{/g, "&#123;").replace(/}/g, "&#125;");
     };
-    
-    return text.split('\n').map((line, index) => {
+
+    return text.split("\n").map((line, index) => {
       const escapedLine = escapeBraces(line);
-      
+
       // Check for bullet points (starting with -, *, •)
       if (line.match(/^[-*•]\s/)) {
         return (
           <div key={index} className="flex items-start gap-2 mb-1 ml-4">
             <span className="text-emerald-500 mt-1">•</span>
-            <span 
+            <span
               className="text-zinc-700 dark:text-zinc-300"
               dangerouslySetInnerHTML={{ __html: escapedLine.substring(2) }}
             />
           </div>
         );
       }
-      
+
       // Check for numbered lists
       if (line.match(/^\d+\.\s/)) {
-        const number = line.split('.')[0];
-        const content = line.substring(line.indexOf('.') + 2);
+        const number = line.split(".")[0];
+        const content = line.substring(line.indexOf(".") + 2);
         return (
           <div key={index} className="flex items-start gap-2 mb-1 ml-4">
-            <span className="text-emerald-500 font-medium mt-1">
-              {number}.
-            </span>
-            <span 
+            <span className="text-emerald-500 font-medium mt-1">{number}.</span>
+            <span
               className="text-zinc-700 dark:text-zinc-300"
               dangerouslySetInnerHTML={{ __html: escapeBraces(content) }}
             />
           </div>
         );
       }
-      
+
       // Check for headers
-      if (line.startsWith('# ')) {
+      if (line.startsWith("# ")) {
         return (
-          <h2 key={index} className="text-xl font-bold text-zinc-800 dark:text-zinc-100 mt-6 mb-3">
-            <span dangerouslySetInnerHTML={{ __html: escapedLine.substring(2) }} />
+          <h2
+            key={index}
+            className="text-xl font-bold text-zinc-800 dark:text-zinc-100 mt-6 mb-3"
+          >
+            <span
+              dangerouslySetInnerHTML={{ __html: escapedLine.substring(2) }}
+            />
           </h2>
         );
       }
-      
-      if (line.startsWith('## ')) {
+
+      if (line.startsWith("## ")) {
         return (
-          <h3 key={index} className="text-lg font-semibold text-zinc-800 dark:text-zinc-100 mt-5 mb-2">
-            <span dangerouslySetInnerHTML={{ __html: escapedLine.substring(3) }} />
+          <h3
+            key={index}
+            className="text-lg font-semibold text-zinc-800 dark:text-zinc-100 mt-5 mb-2"
+          >
+            <span
+              dangerouslySetInnerHTML={{ __html: escapedLine.substring(3) }}
+            />
           </h3>
         );
       }
-      
-      if (line.startsWith('### ')) {
+
+      if (line.startsWith("### ")) {
         return (
-          <h4 key={index} className="font-medium text-zinc-800 dark:text-zinc-100 mt-4 mb-2">
-            <span dangerouslySetInnerHTML={{ __html: escapedLine.substring(4) }} />
+          <h4
+            key={index}
+            className="font-medium text-zinc-800 dark:text-zinc-100 mt-4 mb-2"
+          >
+            <span
+              dangerouslySetInnerHTML={{ __html: escapedLine.substring(4) }}
+            />
           </h4>
         );
       }
-      
+
       // Check for bold text (handled by dangerouslySetInnerHTML)
-      if (line.includes('**') && line.includes('**', line.indexOf('**') + 2)) {
+      if (line.includes("**") && line.includes("**", line.indexOf("**") + 2)) {
         return (
-          <p 
-            key={index} 
+          <p
+            key={index}
             className="text-zinc-700 dark:text-zinc-300 mb-3 leading-relaxed font-medium"
-            dangerouslySetInnerHTML={{ __html: escapedLine.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }}
+            dangerouslySetInnerHTML={{
+              __html: escapedLine.replace(
+                /\*\*(.*?)\*\*/g,
+                "<strong>$1</strong>",
+              ),
+            }}
           />
         );
       }
-      
+
       // Regular paragraph
       if (line.trim()) {
         return (
-          <p 
-            key={index} 
+          <p
+            key={index}
             className="text-zinc-700 dark:text-zinc-300 mb-3 leading-relaxed"
             dangerouslySetInnerHTML={{ __html: escapedLine }}
           />
         );
       }
-      
+
       // Empty line (add spacing)
       return <div key={index} className="h-3" />;
     });
@@ -289,17 +321,21 @@ export default function StudyApp() {
   // Get complexity badge color
   const getComplexityColor = (complexity: string) => {
     switch (complexity.toLowerCase()) {
-      case 'easy': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-      case 'medium': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
-      case 'hard': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
-      default: return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+      case "easy":
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+      case "medium":
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
+      case "hard":
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+      default:
+        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
     }
   };
 
   // Calculate total revision time if chapters exist
   const calculateTotalRevisionTime = () => {
     if (!studyData?.chapters) return studyData?.revisionTime || "Not specified";
-    
+
     // Simple calculation - in a real app you'd parse time strings
     return `${studyData.chapters.length * 30} minutes (estimated)`;
   };
@@ -378,15 +414,27 @@ export default function StudyApp() {
                 </h1>
                 <div className="flex flex-wrap gap-3 mt-2">
                   <div className="flex items-center gap-1 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <svg
+                      className="w-4 h-4 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
                     </svg>
                     <span className="text-sm text-white">
                       Revision: {calculateTotalRevisionTime()}
                     </span>
                   </div>
                   {studyData?.complexity && (
-                    <div className={`rounded-full px-3 py-1 text-sm font-medium ${getComplexityColor(studyData.complexity)}`}>
+                    <div
+                      className={`rounded-full px-3 py-1 text-sm font-medium ${getComplexityColor(studyData.complexity)}`}
+                    >
                       {studyData.complexity.toUpperCase()}
                     </div>
                   )}
@@ -412,9 +460,14 @@ export default function StudyApp() {
                       Try asking:
                     </p>
                     <ul className="text-xs text-zinc-600 dark:text-zinc-400 space-y-1">
-                      <li>• "Summarize this PDF with key points and revision time"</li>
+                      <li>
+                        • "Summarize this PDF with key points and revision time"
+                      </li>
                       <li>• "Create a study guide for this topic"</li>
-                      <li>• "Break down this content into chapters with complexity ratings"</li>
+                      <li>
+                        • "Break down this content into chapters with complexity
+                        ratings"
+                      </li>
                     </ul>
                   </div>
                 </div>
@@ -425,8 +478,18 @@ export default function StudyApp() {
                 {studyData?.chapters && studyData.chapters.length > 0 && (
                   <div className="mb-8">
                     <h3 className="text-lg font-semibold text-zinc-800 dark:text-zinc-100 mb-4 flex items-center gap-2">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                        />
                       </svg>
                       Chapters Overview
                     </h3>
@@ -444,26 +507,36 @@ export default function StudyApp() {
                               <span className="text-xs bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 px-2 py-1 rounded">
                                 {chapter.revisionTime}
                               </span>
-                              <span className={`text-xs px-2 py-1 rounded ${getComplexityColor(chapter.complexity)}`}>
+                              <span
+                                className={`text-xs px-2 py-1 rounded ${getComplexityColor(chapter.complexity)}`}
+                              >
                                 {chapter.complexity}
                               </span>
                             </div>
                           </div>
-                          {chapter.keyPoints && chapter.keyPoints.length > 0 && (
-                            <ul className="text-sm text-zinc-600 dark:text-zinc-400 space-y-1">
-                              {chapter.keyPoints.slice(0, 3).map((point, i) => (
-                                <li key={i} className="flex items-start gap-2">
-                                  <span className="text-blue-500 mt-1">•</span>
-                                  <span>{point}</span>
-                                </li>
-                              ))}
-                              {chapter.keyPoints.length > 3 && (
-                                <li className="text-xs text-zinc-500">
-                                  + {chapter.keyPoints.length - 3} more points
-                                </li>
-                              )}
-                            </ul>
-                          )}
+                          {chapter.keyPoints &&
+                            chapter.keyPoints.length > 0 && (
+                              <ul className="text-sm text-zinc-600 dark:text-zinc-400 space-y-1">
+                                {chapter.keyPoints
+                                  .slice(0, 3)
+                                  .map((point, i) => (
+                                    <li
+                                      key={i}
+                                      className="flex items-start gap-2"
+                                    >
+                                      <span className="text-blue-500 mt-1">
+                                        •
+                                      </span>
+                                      <span>{point}</span>
+                                    </li>
+                                  ))}
+                                {chapter.keyPoints.length > 3 && (
+                                  <li className="text-xs text-zinc-500">
+                                    + {chapter.keyPoints.length - 3} more points
+                                  </li>
+                                )}
+                              </ul>
+                            )}
                         </div>
                       ))}
                     </div>
@@ -483,15 +556,28 @@ export default function StudyApp() {
                 {/* Study Tips */}
                 <div className="mt-8 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-5 border border-blue-200 dark:border-blue-800">
                   <h4 className="font-semibold text-blue-800 dark:text-blue-300 mb-3 flex items-center gap-2">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
                     </svg>
                     Study Tips
                   </h4>
                   <ul className="text-sm text-blue-700 dark:text-blue-400 space-y-2">
                     <li className="flex items-start gap-2">
                       <span className="mt-1">•</span>
-                      <span>Break down revision into {studyData?.chapters?.length || 3} sessions</span>
+                      <span>
+                        Break down revision into{" "}
+                        {studyData?.chapters?.length || 3} sessions
+                      </span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="mt-1">•</span>
@@ -499,7 +585,10 @@ export default function StudyApp() {
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="mt-1">•</span>
-                      <span>Use active recall by covering the content and trying to remember key points</span>
+                      <span>
+                        Use active recall by covering the content and trying to
+                        remember key points
+                      </span>
                     </li>
                   </ul>
                 </div>
@@ -511,7 +600,8 @@ export default function StudyApp() {
           {content && (
             <div className="px-6 py-4 bg-zinc-50 dark:bg-zinc-800/50 border-t border-zinc-200 dark:border-zinc-700">
               <p className="text-xs text-zinc-500 dark:text-zinc-400 text-center">
-                Content generated by AI • Adjust revision time based on your pace
+                Content generated by AI • Adjust revision time based on your
+                pace
               </p>
             </div>
           )}
