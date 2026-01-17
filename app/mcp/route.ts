@@ -5,7 +5,14 @@ import { z } from "zod";
 
 const getAppsSdkCompatibleHtml = async (baseUrl: string, path: string) => {
   const result = await fetch(`${baseUrl}${path}`);
-  return await result.text();
+  const html = await result.text();
+  const baseTag = `<base href="${baseUrl}/">`;
+
+  if (html.includes("<head>")) {
+    return html.replace("<head>", `<head>${baseTag}`);
+  }
+
+  return `${baseTag}${html}`;
 };
 
 // In-memory storage for todos
