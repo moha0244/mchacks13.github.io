@@ -7,7 +7,7 @@ A Todo List application integrated with ChatGPT using the [OpenAI Apps SDK](http
 This project implements an interactive todo list widget that renders directly inside ChatGPT. Users can create, complete, and delete tasks through ChatGPT commands, and the widget updates in real-time.
 
 ## Technologies
-
+ 
 - **Framework**: Next.js 15.5.7 (App Router)
 - **UI**: React 19.1.0 + Tailwind CSS 4
 - **Protocol**: Model Context Protocol (MCP) v1.20.0
@@ -119,5 +119,3 @@ baseUrl.ts                # Dynamic base URL
 The project is configured for Vercel. The `baseUrl.ts` file automatically detects Vercel environment variables.
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/vercel-labs/chatgpt-apps-sdk-nextjs-starter)
-
-
